@@ -154,8 +154,8 @@ def check_ad():
     
     try:
         
-        if not title or not description or not catgory or not images:
-            return jsonify({"error": "Please provide title, description, category and images"}), 400
+        if not title or not description or not catgory :
+            return jsonify({"error": "Please provide title, description, category"}), 400
         
         if not is_suitable_text(title, model):
             return jsonify({"error": "Title contains inappropriate language"}), 400
@@ -172,22 +172,27 @@ def check_ad():
     except Exception as e:
         return jsonify({"error": f"An error occurred while processing the text data: {e}"}), 500
     try:
-        for image in images:
-            base64_image = encode_image(image)
-            if not base64_image:
-                return jsonify({"error": "An error occurred while encoding the image"}), 500
-            
-            if not is_image_safe(base64_image, model):
-                return jsonify({"error": "Image is not safe"}), 400
-            
-            if is_image_watermarked(base64_image, model):
-                return jsonify({"error": "Image is watermarked"}), 400
-            
-            if is_person_in_image(base64_image, model) and (catgory.lower() != "jobs" or catgory.lower() != "fashions"):
-                return jsonify({"error": "Image does contain a person"}), 400
-            
-            if not is_imageTitle_consistent(title, base64_image, model):
-                return jsonify({"error": "Image is not consistent with the title"}), 400
+        if (not images or images[0].filename == '') and (catgory.lower() == "jobs" ):
+            return jsonify({"message": "Ad is suitable"}), 200
+        elif (not images or images[0].filename == '') and (catgory.lower() != "jobs" ):
+            return jsonify({"error": "Please provide images"}), 400
+        else:
+            for image in images:
+                base64_image = encode_image(image)
+                if not base64_image:
+                    return jsonify({"error": "An error occurred while encoding the image"}), 500
+                
+                if not is_image_safe(base64_image, model):
+                    return jsonify({"error": "Image is not safe"}), 400
+                
+                if is_image_watermarked(base64_image, model):
+                    return jsonify({"error": "Image is watermarked"}), 400
+                
+                if is_person_in_image(base64_image, model) and (catgory.lower() != "jobs" or catgory.lower() != "fashions"):
+                    return jsonify({"error": "Image does contain a person"}), 400
+                
+                if not is_imageTitle_consistent(title, base64_image, model):
+                    return jsonify({"error": "Image is not consistent with the title"}), 400
     except Exception as e:
         return jsonify({"error": f"An error occurred while processing the images: {e}"}), 500
         
